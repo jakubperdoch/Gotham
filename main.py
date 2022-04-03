@@ -20,6 +20,9 @@ FPS= 60
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
 batman_image = pygame.image.load("assets/batman.png").convert_alpha()
 
+#game variables
+GRAVITY = 1
+
 
 #define colors
 WHITE=(255,255,255)
@@ -33,6 +36,7 @@ class Player():
         self.height=75 
         self.rect= pygame.Rect(0,0, self.width, self.height)
         self.rect.center =(x,y)
+        self.vel_y=0
         self.flip=False
     
     def move(self):
@@ -50,12 +54,21 @@ class Player():
             dx= +10
             self.flip=False
 
+        #gravity
+        self.vel_y +=GRAVITY
+        dy += self.vel_y
+
         #ensure player doesnt go off the edge of the screen
         if self.rect.left +dx <0:
             dx=- self.rect.left
-        
+
         if self.rect.right +dx > SCREEN_WIDTH:
             dx= SCREEN_WIDTH - self.rect.right
+
+        #check collision with ground
+        if self.rect.bottom +dy > SCREEN_HEIGHT:
+            dy=0
+            self.vel_y =-20
 
         #update rect position
         self.rect.x +=dx
