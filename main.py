@@ -24,12 +24,22 @@ platform_image=pygame.image.load("assets/forma.png")
 
 #game variables
 GRAVITY = 1
-MAX_PLATFORM=10
+SCROLL_THRESH= 200
+MAX_PLATFORM=12
+scroll=0
+bg_scroll=0
 
 
 
 #define colors
 WHITE=(255,255,255)
+
+
+#function for drawing the background
+def draw_bg(bg_scroll):
+    screen.blit(bg_image, (0, 0 +bg_scroll))
+    screen.blit(bg_image, (0, -600+bg_scroll))
+
 
 
 #player class
@@ -48,6 +58,7 @@ class Player():
         #reset variables
         dx=0
         dy=0
+        scroll=0
 
         #process keypresses
         key = pygame.key.get_pressed()
@@ -87,9 +98,18 @@ class Player():
             dy=0
             self.vel_y =-20
 
+        #check if the player has bounced to the top of the screen
+        if self.rect.top<=SCROLL_THRESH:
+            #if player is jumping
+            if self.vel_y<0:
+                scroll= -dy
+            
+
         #update rect position
         self.rect.x +=dx
-        self.rect.y +=dy
+        self.rect.y +=dy + scroll 
+
+        return scroll
        
 
     def draw(self):
@@ -105,6 +125,13 @@ class Platform(pygame.sprite.Sprite):
         self.rect=self.image.get_rect()
         self.rect.x=x
         self.rect.y=y
+    
+    def update(self,scroll):
+
+        #update platform vert postition
+        self.rect.y +=scroll
+
+
 
 
 #player instance
@@ -129,11 +156,26 @@ run = True
 while run:
 
     #movement
-    batman.move()
+    scroll=batman.move()
     clock.tick(FPS)
+    
+    
 
     #draw bg
-    screen.blit(bg_image, (0, 0))
+    bg_scroll+=scroll
+    if bg_scroll>=600:
+        bg_scroll=0
+    draw_bg(bg_scroll)
+
+
+
+
+
+    #draw temporary scroll threshold
+    pygame.draw.line(screen, WHITE, (0,SCROLL_THRESH), (SCREEN_WIDTH,SCROLL_THRESH))
+
+    #update platforms
+    platform_group.update(scroll)
 
     #draw sprites
     platform_group.draw(screen)
