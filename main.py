@@ -27,18 +27,11 @@ GRAVITY = 1
 SCROLL_THRESH= 200
 MAX_PLATFORM=12
 scroll=0
-bg_scroll=0
-
 
 
 #define colors
 WHITE=(255,255,255)
 
-
-#function for drawing the background
-def draw_bg(bg_scroll):
-    screen.blit(bg_image, (0, 0 +bg_scroll))
-    screen.blit(bg_image, (0, -600+bg_scroll))
 
 
 
@@ -131,6 +124,10 @@ class Platform(pygame.sprite.Sprite):
         #update platform vert postition
         self.rect.y +=scroll
 
+        #check if platform has gone off the screen
+        if self.rect.top >SCREEN_HEIGHT:
+            self.kill()
+
 
 
 
@@ -140,13 +137,9 @@ batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
 #create sprite groups
 platform_group=pygame.sprite.Group()
 
-#create temporary platforms
-for p in range(MAX_PLATFORM):
-    p_w= random.randint(40, 60)
-    p_x= random.randint(0, SCREEN_WIDTH- p_w)
-    p_y= p* random.randint(80, 120)
-    platform= Platform(p_x,p_y,p_w)
-    platform_group.add(platform)
+#create  starting platform
+platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100)
+platform_group.add(platform)
 
 
 
@@ -162,17 +155,18 @@ while run:
     
 
     #draw bg
-    bg_scroll+=scroll
-    if bg_scroll>=600:
-        bg_scroll=0
-    draw_bg(bg_scroll)
+    screen.blit(bg_image, (0, 0))
 
 
+    #generate platforms
+    if len(platform_group)<MAX_PLATFORM:
+        p_w = random.randint(40, 60)
+        p_x = random.randint(0, SCREEN_WIDTH-  p_w)
+        p_y = platform.rect.y -random.randint(80, 120)
+        platform=Platform(p_x, p_y, p_w)
+        platform_group.add(platform)
 
-
-
-    #draw temporary scroll threshold
-    pygame.draw.line(screen, WHITE, (0,SCROLL_THRESH), (SCREEN_WIDTH,SCROLL_THRESH))
+    print(len(platform_group))
 
     #update platforms
     platform_group.update(scroll)
