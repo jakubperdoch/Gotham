@@ -223,6 +223,8 @@ while run:
         #draw panel
         draw_panel()
 
+        
+
     #check game over
         if batman.rect.top>SCREEN_HEIGHT:
             game_over=True
@@ -235,17 +237,19 @@ while run:
                 pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100)) #uzatvorenie obrazovky
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
 
+                #update high score
+            if score> high_score:
+                high_score= score
+                with open('score.txt','w') as file:
+                    file.write(str(high_score))
+
         else:
             draw_text("GAME OVER !",font_vbig,WHITE,85,125)
             draw_text("SCORE: " +str(score),font_big, WHITE, 20, 250)
             draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,20 ,400 )
             draw_text("HIGH SCORE: " +str(high_score),font_big,WHITE,20,300)
             
-            #update high score
-            if score> high_score:
-                high_score= score
-                with open('score.txt','w') as file:
-                    file.write(str(high_score))
+            
 
             
             
