@@ -1,21 +1,22 @@
 #import libraries
-import pygame
-import random
+import pygame #import pygame
+import random #import random
+import os
 
 #initialise pygame
 pygame.init()
 
 #game window
-SCREEN_WIDTH= 400
-SCREEN_HEIGHT= 600
+SCREEN_WIDTH= 400 #šírka
+SCREEN_HEIGHT= 600 #výška
 
 #create game window
-screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-pygame.display.set_caption('Gotham')
+screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT)) 
+pygame.display.set_caption('Gotham') # nazov hry 
 
 #framerate
 clock=pygame.time.Clock()
-FPS= 60
+FPS= 55
 
 #load images
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
@@ -29,10 +30,20 @@ MAX_PLATFORM=12
 scroll=0
 game_over = False
 score=0
+fade_counter=0
+
+
+if os.path.exists('score.txt'):
+    with open('score.txt','r') as file:
+        hight_score= int(file.read())
+else:
+    high_score=0
 
 
 #define colors
 WHITE=(255,255,255)
+BLACK=(0,0,0)
+PANEL=(0,0,0)
 
 #fonts
 font_small= pygame.font.SysFont("Lucida Sans", 20)
@@ -45,19 +56,26 @@ def draw_text(text,font,text_color,x,y):
     screen.blit(img, (x,y))
 
 
+#function for drawing info panel
+def draw_panel():
+    pygame.draw.rect(screen, PANEL, (0,0,SCREEN_WIDTH,30))
+    pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)
+    draw_text("SCORE: " +str(score),font_small,WHITE,0,0)
+
+
 
 
 
 #player class
 class Player():
     def __init__(self,x,y):
-        self.image=pygame.transform.scale(batman_image,(60,60))
-        self.width= 25
-        self.height=40
+        self.image=pygame.transform.scale(batman_image,(60,60)) #velkost postavicky
+        self.width= 25 #nastavene kolizie okolo postavy
+        self.height=40 #nastavene kolizie okolo postavy
         self.rect= pygame.Rect(0,0, self.width, self.height)
         self.rect.center =(x,y)
         self.vel_y=0
-        self.flip=False
+        self.flip=False #zakladne otocenie postavy
     
     def move(self):
 
@@ -70,10 +88,10 @@ class Player():
         key = pygame.key.get_pressed()
         if key[pygame.K_a]:
             dx= -10
-            self.flip=True
+            self.flip=True #otocenie postavy
         if key[pygame.K_d]:
             dx= +10
-            self.flip=False
+            self.flip=False #otocenie postavy
 
         #gravity
         self.vel_y +=GRAVITY
@@ -162,6 +180,7 @@ while run:
     
     clock.tick(FPS)
 
+
     #GAME OVER
     if game_over == False:
     
@@ -180,7 +199,11 @@ while run:
             platform=Platform(p_x, p_y, p_w)
             platform_group.add(platform)
 
-        print(len(platform_group))
+        print(len(platform_group)) 
+
+        #update score
+        if scroll > 0:
+            score += scroll
 
         #update platforms
         platform_group.update(scroll)
@@ -189,13 +212,27 @@ while run:
         platform_group.draw(screen)
         batman.draw()
 
+        #draw panel
+        draw_panel()
+
     #check game over
         if batman.rect.top>SCREEN_HEIGHT:
             game_over=True
-    #GAME OVER
+
     else:
+        if fade_counter<SCREEN_WIDTH:
+            fade_counter +=5 
+            for y in range(0,6,2):
+
+                pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100))
+                pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100))
+
         draw_text("GAME OVER !",font_big,WHITE,130,200)
         draw_text("SCORE: " +str(score),font_big, WHITE, 130, 250)
+        
+        
+
+        
         draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,25 ,300 )
         key=pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
@@ -203,6 +240,7 @@ while run:
             game_over=False
             score=0
             scroll=0
+            fade_counter=0
             #reposition batman
             batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
             #reset platforms
