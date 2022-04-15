@@ -11,12 +11,12 @@ SCREEN_WIDTH= 400 #šírka
 SCREEN_HEIGHT= 600 #výška
 
 #create game window
-screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT)) 
+screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT)) #vykreslenie okna
 pygame.display.set_caption('Gotham') # nazov hry 
 
 #framerate
 clock=pygame.time.Clock()
-FPS= 55
+FPS= 60
 
 #load images
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
@@ -48,6 +48,8 @@ PANEL=(0,0,0)
 #fonts
 font_small= pygame.font.SysFont("Lucida Sans", 20)
 font_big= pygame.font.SysFont("Lucida Sans", 27)
+font_vbig= pygame.font.SysFont("Lucida Sans", 40)
+
 
 
 #function for outputting text onto screen
@@ -61,6 +63,7 @@ def draw_panel():
     pygame.draw.rect(screen, PANEL, (0,0,SCREEN_WIDTH,30))
     pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)
     draw_text("SCORE: " +str(score),font_small,WHITE,0,0)
+    
 
 
 
@@ -75,7 +78,7 @@ class Player():
         self.rect= pygame.Rect(0,0, self.width, self.height)
         self.rect.center =(x,y)
         self.vel_y=0
-        self.flip=False #zakladne otocenie postavy
+        self.flip=False #zakladne otocenie postavy do prava
     
     def move(self):
 
@@ -88,10 +91,10 @@ class Player():
         key = pygame.key.get_pressed()
         if key[pygame.K_a]:
             dx= -10
-            self.flip=True #otocenie postavy
+            self.flip=True #otocenie postavy do lava
         if key[pygame.K_d]:
             dx= +10
-            self.flip=False #otocenie postavy
+            self.flip=False #otocenie postavy do prava
 
         #gravity
         self.vel_y +=GRAVITY
@@ -135,7 +138,7 @@ class Player():
        
 
     def draw(self):
-        screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5))
+        screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy
         pygame.draw.rect(screen,WHITE,self.rect,2)
 
 
@@ -154,20 +157,20 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y +=scroll
 
         #check if platform has gone off the screen
-        if self.rect.top >SCREEN_HEIGHT:
+        if self.rect.top >SCREEN_HEIGHT: #aby nebola platforma mimo mapy
             self.kill()
 
 
 
 
 #player instance
-batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
+batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 ) #zaciatocna pozicia hraca
 
 #create sprite groups
 platform_group=pygame.sprite.Group()
 
 #create  starting platform
-platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100)
+platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100) #rozmery zaciatocnej platformy
 platform_group.add(platform)
 
 
@@ -182,7 +185,7 @@ while run:
 
 
     #GAME OVER
-    if game_over == False:
+    if game_over == False: 
     
         #movement
         scroll=batman.move()
@@ -193,29 +196,29 @@ while run:
 
         #generate platforms
         if len(platform_group)<MAX_PLATFORM:
-            p_w = random.randint(40, 60)
-            p_x = random.randint(0, SCREEN_WIDTH-  p_w)
-            p_y = platform.rect.y -random.randint(80, 120)
-            platform=Platform(p_x, p_y, p_w)
+            p_w = random.randint(40, 60) #rozmedzie sirky platform
+            p_x = random.randint(0, SCREEN_WIDTH-  p_w) #pozicia platform x os
+            p_y = platform.rect.y -random.randint(80, 120) #pozicia platform y os
+            platform=Platform(p_x, p_y, p_w) 
             platform_group.add(platform)
 
         print(len(platform_group)) 
 
         #update score
         if scroll > 0:
-            score += scroll
+            score += scroll #skore sa updtatuje podla dosiahnutej vysky
 
 
         #draw line at previous high score
-        pygame.draw.line(screen, WHITE, (0,score-high_score + SCROLL_THRESH),(SCREEN_WIDTH,score-high_score + SCROLL_THRESH),3)
-        draw_text('HIGH SCORE',font_small,WHITE,SCREEN_WIDTH-130,score-high_score + SCROLL_THRESH)
+        pygame.draw.line(screen, WHITE, (0,score-high_score + SCROLL_THRESH),(SCREEN_WIDTH,score-high_score + SCROLL_THRESH),3) #čiara zaznačujúca high score
+        draw_text('HIGH SCORE',font_small,WHITE,SCREEN_WIDTH-130,score-high_score + SCROLL_THRESH) #napis "high score" pod ciarou
 
         #update platforms
         platform_group.update(scroll)
 
         #draw sprites
-        platform_group.draw(screen)
-        batman.draw()
+        platform_group.draw(screen) # vykreslenie platform
+        batman.draw() #vykreslenie postavy
 
         #draw panel
         draw_panel()
@@ -229,13 +232,14 @@ while run:
             fade_counter +=5 
             for y in range(0,6,2):
 
-                pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100))
-                pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100))
+                pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100)) #uzatvorenie obrazovky
+                pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
 
         else:
-            draw_text("GAME OVER !",font_big,WHITE,130,200)
-            draw_text("SCORE: " +str(score),font_big, WHITE, 130, 250)
-            draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,25 ,300 )
+            draw_text("GAME OVER !",font_vbig,WHITE,85,125)
+            draw_text("SCORE: " +str(score),font_big, WHITE, 20, 250)
+            draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,20 ,400 )
+            draw_text("HIGH SCORE: " +str(high_score),font_big,WHITE,20,300)
             
             #update high score
             if score> high_score:
