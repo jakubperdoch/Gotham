@@ -35,7 +35,7 @@ fade_counter=0
 
 if os.path.exists('score.txt'):
     with open('score.txt','r') as file:
-        hight_score= int(file.read())
+        high_score= int(file.read())
 else:
     high_score=0
 
@@ -205,6 +205,11 @@ while run:
         if scroll > 0:
             score += scroll
 
+
+        #draw line at previous high score
+        pygame.draw.line(screen, WHITE, (0,score-high_score + SCROLL_THRESH),(SCREEN_WIDTH,score-high_score + SCROLL_THRESH),3)
+        draw_text('HIGH SCORE',font_small,WHITE,SCREEN_WIDTH-130,score-high_score + SCROLL_THRESH)
+
         #update platforms
         platform_group.update(scroll)
 
@@ -227,32 +232,42 @@ while run:
                 pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100))
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100))
 
-        draw_text("GAME OVER !",font_big,WHITE,130,200)
-        draw_text("SCORE: " +str(score),font_big, WHITE, 130, 250)
-        
-        
+        else:
+            draw_text("GAME OVER !",font_big,WHITE,130,200)
+            draw_text("SCORE: " +str(score),font_big, WHITE, 130, 250)
+            draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,25 ,300 )
+            
+            #update high score
+            if score> high_score:
+                high_score= score
+                with open('score.txt','w') as file:
+                    file.write(str(high_score))
 
-        
-        draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,25 ,300 )
-        key=pygame.key.get_pressed()
-        if key[pygame.K_SPACE]:
-            #reset variables
-            game_over=False
-            score=0
-            scroll=0
-            fade_counter=0
-            #reposition batman
-            batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
-            #reset platforms
-            platform_group.empty()
-            platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100)
-            platform_group.add(platform)
+            
+            
+            key=pygame.key.get_pressed()
+            if key[pygame.K_SPACE]:
+                #reset variables
+                game_over=False
+                score=0
+                scroll=0
+                fade_counter=0
+                #reposition batman
+                batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
+                #reset platforms
+                platform_group.empty()
+                platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100)
+                platform_group.add(platform)
 
 
     
     #event handler
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            if score> high_score:
+                high_score= score
+                with open('score.txt','w') as file:
+                    file.write(str(high_score))
             run= False
     
 #update display window
