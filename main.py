@@ -1,7 +1,7 @@
 #import libraries
 import pygame #import pygame
 import random #import random
-import os
+import os #import os
 
 #initialise pygame
 pygame.init()
@@ -33,7 +33,7 @@ score=0
 fade_counter=0
 
 
-if os.path.exists('score.txt'):
+if os.path.exists('score.txt'): #ak score.txt existuje tak si zoberie z neho high score 
     with open('score.txt','r') as file:
         high_score= int(file.read())
 else:
@@ -59,10 +59,10 @@ def draw_text(text,font,text_color,x,y):
 
 
 #function for drawing info panel
-def draw_panel():
-    pygame.draw.rect(screen, PANEL, (0,0,SCREEN_WIDTH,30))
-    pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)
-    draw_text("SCORE: " +str(score),font_small,WHITE,0,0)
+def draw_panel(): #panel so score
+    pygame.draw.rect(screen, PANEL, (0,0,SCREEN_WIDTH,30))#pozadie tabulky
+    pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)#ciara oddelujuca hru a tabulku
+    draw_text("SCORE: " +str(score),font_small,WHITE,0,0)#vypisuje score pocas hry
     
 
 
@@ -70,7 +70,7 @@ def draw_panel():
 
 
 #player class
-class Player():
+class Player(): #vlastnosti hraca a jeho parametre
     def __init__(self,x,y):
         self.image=pygame.transform.scale(batman_image,(60,60)) #velkost postavicky
         self.width= 25 #nastavene kolizie okolo postavy
@@ -139,25 +139,38 @@ class Player():
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy
-        pygame.draw.rect(screen,WHITE,self.rect,2)
+        pygame.draw.rect(screen,WHITE,self.rect,2)#stvorec okolo postavy aby sa mi dobre nastavovali kolizie
 
 
 #platform class
 class Platform(pygame.sprite.Sprite):
-    def __init__(self,x,y,width):
+    def __init__(self,x,y,width,moving):
         pygame.sprite.Sprite.__init__(self)
         self.image=pygame.transform.scale(platform_image, (width,20))
+        self.moving= moving
+        self.move_counter=random.randint(0, 50) 
+        self.direction= random.choice([-1,1]) 
+        self.speed =random.randint(1, 2)
         self.rect=self.image.get_rect()
         self.rect.x=x
         self.rect.y=y
     
     def update(self,scroll):
+        #move platform side to side if it is a moving platform
+        if self.moving==True: 
+            self.move_counter +=1
+            self.rect.x +=self.direction * self.speed #platformy mozu byt rozne rychle
 
+        #change platform if it has moved fully or hit a wall
+        if self.move_counter >=100 or self.rect.left <0 or self.rect.right >SCREEN_WIDTH: #ak sa platformi budu pohybovat dostatocne dlho alebo narazia do steny tak zmenia smer
+            self.direction *= -1 
+            self.move_counter =0
+ 
         #update platform vert postition
         self.rect.y +=scroll
 
         #check if platform has gone off the screen
-        if self.rect.top >SCREEN_HEIGHT: #aby nebola platforma mimo mapy
+        if self.rect.top >SCREEN_HEIGHT: #aby nebola platforma mimo mapy,ked prejdeme na dalsiu obrazovku
             self.kill()
 
 
@@ -170,7 +183,7 @@ batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 ) #zaciatocna pozicia hra
 platform_group=pygame.sprite.Group()
 
 #create  starting platform
-platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100) #rozmery zaciatocnej platformy
+platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False) #rozmery zaciatocnej platformy
 platform_group.add(platform)
 
 
@@ -185,13 +198,13 @@ while run:
 
 
     #GAME OVER
-    if game_over == False: 
+    if game_over == False:  #pokial je hrac nazive tak sa odohra main game loop
     
         #movement
-        scroll=batman.move()
+        scroll=batman.move() #pohyb postavicky
 
         #draw bg
-        screen.blit(bg_image, (0, 0))
+        screen.blit(bg_image, (0, 0))#vykreslenie pozadia
 
 
         #generate platforms
@@ -199,14 +212,20 @@ while run:
             p_w = random.randint(40, 60) #rozmedzie sirky platform
             p_x = random.randint(0, SCREEN_WIDTH-  p_w) #pozicia platform x os
             p_y = platform.rect.y -random.randint(80, 120) #pozicia platform y os
-            platform=Platform(p_x, p_y, p_w) 
+            p_type=random.randint(1,2)#vyber z dvoch typov platform
+            if p_type==1 and score>50: #ak sa tieto dve podmienky splnia zacnu sa generovat aj hybajuce sa platformy
+                p_moving=True
+            else:
+                p_moving=False
+
+            platform=Platform(p_x, p_y, p_w,p_moving) 
             platform_group.add(platform)
 
         print(len(platform_group)) 
 
         #update score
         if scroll > 0:
-            score += scroll #skore sa updtatuje podla dosiahnutej vysky
+            score += scroll #skore sa updatuje podla dosiahnutej vysky hraca
 
 
         #draw line at previous high score
@@ -214,23 +233,23 @@ while run:
         draw_text('HIGH SCORE',font_small,WHITE,SCREEN_WIDTH-130,score-high_score + SCROLL_THRESH) #napis "high score" pod ciarou
 
         #update platforms
-        platform_group.update(scroll)
+        platform_group.update(scroll)#vykresluje plosiny do nekonecna
 
         #draw sprites
         platform_group.draw(screen) # vykreslenie platform
         batman.draw() #vykreslenie postavy
 
         #draw panel
-        draw_panel()
+        draw_panel() #vzkresli panel so score 
 
         
 
     #check game over
-        if batman.rect.top>SCREEN_HEIGHT:
-            game_over=True
+        if batman.rect.top>SCREEN_HEIGHT: #aby sme nepadali do nekonecna
+            game_over=True 
 
     else:
-        if fade_counter<SCREEN_WIDTH:
+        if fade_counter<SCREEN_WIDTH: #uzatvorenie hry po smrti
             fade_counter +=5 
             for y in range(0,6,2):
 
@@ -238,23 +257,24 @@ while run:
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
 
                 #update high score
-            if score> high_score:
+            if score> high_score: #prepise najvyssie dosiahnute skore
                 high_score= score
                 with open('score.txt','w') as file:
                     file.write(str(high_score))
 
-        else:
+        else: #vypise score,...
             draw_text("GAME OVER !",font_vbig,WHITE,85,125)
             draw_text("SCORE: " +str(score),font_big, WHITE, 20, 250)
             draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,20 ,400 )
-            draw_text("HIGH SCORE: " +str(high_score),font_big,WHITE,20,300)
+            draw_text("HIGHEST SCORE: " +str(high_score),font_big,WHITE,20,300)
             
             
 
             
             
             key=pygame.key.get_pressed()
-            if key[pygame.K_SPACE]:
+            
+            if key[pygame.K_SPACE]: #zresetovanie parametrov a pozicie postavy
                 #reset variables
                 game_over=False
                 score=0
@@ -264,15 +284,15 @@ while run:
                 batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
                 #reset platforms
                 platform_group.empty()
-                platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100)
+                platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False)
                 platform_group.add(platform)
 
 
     
     #event handler
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            if score> high_score:
+    for event in pygame.event.get(): 
+        if event.type == pygame.QUIT: #ukoncenie hry
+            if score> high_score: #ak vypneme hru xkom ulozi sa score
                 high_score= score
                 with open('score.txt','w') as file:
                     file.write(str(high_score))
