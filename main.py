@@ -22,15 +22,18 @@ FPS= 60
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
 batman_image = pygame.image.load("assets/batman.png").convert_alpha()
 platform_image=pygame.image.load("assets/forma.png")
+wing =pygame.image.load("assets/wing.png").convert_alpha()
+
 
 #game variables
 GRAVITY = 1
 SCROLL_THRESH= 200
-MAX_PLATFORM=12
+MAX_PLATFORM=7
 scroll=0
 game_over = False
 score=0
 fade_counter=0
+
 
 
 if os.path.exists('score.txt'): #ak score.txt existuje tak si zoberie z neho high score 
@@ -142,6 +145,43 @@ class Player(): #vlastnosti hraca a jeho parametre
         pygame.draw.rect(screen,WHITE,self.rect,2)#stvorec okolo postavy aby sa mi dobre nastavovali kolizie
 
 
+#enemy class
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self,SCREEN_WIDTH,y,img,scale):
+        pygame.sprite.Sprite.__init__(self)
+        
+        #define variables
+        self.direction= random.choice([-1,1]) #random vyber smeru pohybu enemaka
+        
+        if self.direction==1: #aby sa enemak otocil spravnym smerom
+            self.flip=True
+        else:
+            self.flip=False
+
+
+        #load images
+        wing =pygame.image.load("assets/wing.png").convert_alpha()#obrazok enemaka
+        wing= pygame.transform.flip(wing, self.flip, False)#enemak sa otoci v smere pohybu
+        self.image=pygame.transform.scale(wing,(110,110))#rozmery enemaka
+        self.rect= self.image.get_rect()#enemak vlozeny do stvorca-pre kolizie 
+
+        if self.direction==1:#podmienka aby enemak nesiel mimo mapu
+            self.rect.x= 0 
+        else:
+            self.rect.x= SCREEN_WIDTH
+        self.rect.y= y
+
+    def update(self,scroll,SCREEN_WIDTH,):
+        
+        #move enemy
+        self.rect.x += self.direction * 2 #smer a rychlost enemaka
+        self.rect.y +=scroll#enemak ostava na y polohe a nehybe sa s nami
+
+        #check if it gone off screen
+        if self.rect.right<0 or self.rect.left >SCREEN_WIDTH:#ked sa enemak dostane na okraj mapy bude zresetovany
+            self.kill()
+
+
 #platform class
 class Platform(pygame.sprite.Sprite):
     def __init__(self,x,y,width,moving):
@@ -181,6 +221,7 @@ batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 ) #zaciatocna pozicia hra
 
 #create sprite groups
 platform_group=pygame.sprite.Group()
+enemy_group=pygame.sprite.Group()
 
 #create  starting platform
 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False) #rozmery zaciatocnej platformy
@@ -213,6 +254,7 @@ while run:
             p_x = random.randint(0, SCREEN_WIDTH-  p_w) #pozicia platform x os
             p_y = platform.rect.y -random.randint(80, 120) #pozicia platform y os
             p_type=random.randint(1,2)#vyber z dvoch typov platform
+            
             if p_type==1 and score>50: #ak sa tieto dve podmienky splnia zacnu sa generovat aj hybajuce sa platformy
                 p_moving=True
             else:
@@ -221,7 +263,16 @@ while run:
             platform=Platform(p_x, p_y, p_w,p_moving) 
             platform_group.add(platform)
 
-        print(len(platform_group)) 
+        #update platforms
+        platform_group.update(scroll)
+
+        #generate enemies
+        if len(enemy_group) ==0 and score>300:#mnozstvo  enemakov
+            enemy=Enemy(SCREEN_WIDTH, 100, wing, 1.5)#parametre enemaka
+            enemy_group.add(enemy)
+
+        #update enemies
+        enemy_group.update(scroll,SCREEN_WIDTH)
 
         #update score
         if scroll > 0:
@@ -238,6 +289,8 @@ while run:
         #draw sprites
         platform_group.draw(screen) # vykreslenie platform
         batman.draw() #vykreslenie postavy
+        enemy_group.draw(screen)
+
 
         #draw panel
         draw_panel() #vzkresli panel so score 
@@ -282,6 +335,8 @@ while run:
                 fade_counter=0
                 #reposition batman
                 batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
+                #reset enemy
+                enemy_group.empty()
                 #reset platforms
                 platform_group.empty()
                 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False)
