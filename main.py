@@ -2,8 +2,10 @@
 import pygame #import pygame
 import random #import random
 import os #import os
+from pygame import mixer#import pre hudbu
 
 #initialise pygame
+mixer.init()
 pygame.init()
 
 #game window
@@ -16,7 +18,18 @@ pygame.display.set_caption('Gotham') # nazov hry
 
 #framerate
 clock=pygame.time.Clock()
-FPS= 50
+FPS= 45
+
+#load music and sounds
+death_fx=pygame.mixer.Sound("assets/death.mp3")#nacitanie soundu smrti
+death_fx.set_volume(0.5)#jeho hlasitost
+
+jump_fx=pygame.mixer.Sound("assets/jump.mp3")#nacitanie soundu jumpu
+jump_fx.set_volume(0.5)#jeho hlasitost
+
+pygame.mixer.music.load("assets/gotham.mp3")#nacitanie hudby
+pygame.mixer.music.set_volume(0.3)#jeho hlasitost
+pygame.mixer.music.play(-1,0.0)#ze sa ma opakovat do nekonecna a od zacati hry
 
 #load images
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
@@ -118,6 +131,7 @@ class Player(): #vlastnosti hraca a jeho parametre
                         self.rect.bottom=platform.rect.top
                         dy=0
                         self.vel_y =-20
+                        jump_fx.play()
                         
 
 
@@ -300,9 +314,11 @@ while run:
     #check game over
         if batman.rect.top>SCREEN_HEIGHT: #aby sme nepadali do nekonecna
             game_over=True 
+            death_fx.play()#aby zahral zvuk smrti
     #check for collision with enemy
         if pygame.sprite.spritecollide(batman, enemy_group, False,pygame.sprite.collide_mask):#ak sa postava "dotkne" enemaka je game ober
             game_over=True
+            death_fx.play()#aby zahral zvuk smrti
     else:
         if fade_counter<SCREEN_WIDTH:
             fade_counter +=5 #uzatvorenie hry po smrti
