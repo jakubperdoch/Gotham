@@ -16,7 +16,7 @@ pygame.display.set_caption('Gotham') # nazov hry
 
 #framerate
 clock=pygame.time.Clock()
-FPS= 60
+FPS= 50
 
 #load images
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
@@ -67,8 +67,6 @@ def draw_panel(): #panel so score
     pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)#ciara oddelujuca hru a tabulku
     draw_text("SCORE: " +str(score),font_small,WHITE,0,0)#vypisuje score pocas hry
     
-
-
 
 
 
@@ -124,8 +122,6 @@ class Player(): #vlastnosti hraca a jeho parametre
 
 
         
-        
-
         #check if the player has bounced to the top of the screen
         if self.rect.top<=SCROLL_THRESH:
             #if player is jumping
@@ -137,12 +133,15 @@ class Player(): #vlastnosti hraca a jeho parametre
         self.rect.x +=dx
         self.rect.y +=dy + scroll 
 
+        #update mask
+        self.mask =pygame.mask.from_surface(self.image)#abz sa postava spravne dotykala enemaka
+
         return scroll
        
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy
-        pygame.draw.rect(screen,WHITE,self.rect,2)#stvorec okolo postavy aby sa mi dobre nastavovali kolizie
+       
 
 
 #enemy class
@@ -162,7 +161,7 @@ class Enemy(pygame.sprite.Sprite):
         #load images
         wing =pygame.image.load("assets/wing.png").convert_alpha()#obrazok enemaka
         wing= pygame.transform.flip(wing, self.flip, False)#enemak sa otoci v smere pohybu
-        self.image=pygame.transform.scale(wing,(110,110))#rozmery enemaka
+        self.image=pygame.transform.scale(wing,(110,100))#rozmery enemaka
         self.rect= self.image.get_rect()#enemak vlozeny do stvorca-pre kolizie 
 
         if self.direction==1:#podmienka aby enemak nesiel mimo mapu
@@ -267,7 +266,7 @@ while run:
         platform_group.update(scroll)
 
         #generate enemies
-        if len(enemy_group) ==0 and score>300:#mnozstvo  enemakov
+        if len(enemy_group) ==0 and score>300: #mnozstvo  enemakov
             enemy=Enemy(SCREEN_WIDTH, 100, wing, 1.5)#parametre enemaka
             enemy_group.add(enemy)
 
@@ -289,8 +288,9 @@ while run:
         #draw sprites
         platform_group.draw(screen) # vykreslenie platform
         batman.draw() #vykreslenie postavy
-        enemy_group.draw(screen)
+        enemy_group.draw(screen)#vykreslenie enemakov
 
+        
 
         #draw panel
         draw_panel() #vzkresli panel so score 
@@ -300,12 +300,13 @@ while run:
     #check game over
         if batman.rect.top>SCREEN_HEIGHT: #aby sme nepadali do nekonecna
             game_over=True 
-
+    #check for collision with enemy
+        if pygame.sprite.spritecollide(batman, enemy_group, False,pygame.sprite.collide_mask):#ak sa postava "dotkne" enemaka je game ober
+            game_over=True
     else:
-        if fade_counter<SCREEN_WIDTH: #uzatvorenie hry po smrti
-            fade_counter +=5 
+        if fade_counter<SCREEN_WIDTH:
+            fade_counter +=5 #uzatvorenie hry po smrti
             for y in range(0,6,2):
-
                 pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100)) #uzatvorenie obrazovky
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
 
