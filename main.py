@@ -21,13 +21,13 @@ clock=pygame.time.Clock()
 FPS= 45
 
 #load music and sounds
-death_fx=pygame.mixer.Sound("assets/death.mp3")#nacitanie soundu smrti
+death_fx=pygame.mixer.Sound("assets/death.wav")#nacitanie soundu smrti
 death_fx.set_volume(0.5)#jeho hlasitost
 
-jump_fx=pygame.mixer.Sound("assets/jump.mp3")#nacitanie soundu jumpu
+jump_fx=pygame.mixer.Sound("assets/jump.wav")#nacitanie soundu jumpu
 jump_fx.set_volume(0.5)#jeho hlasitost
 
-pygame.mixer.music.load("assets/gotham.mp3")#nacitanie hudby
+pygame.mixer.music.load("assets/gotham.wav")#nacitanie hudby
 pygame.mixer.music.set_volume(0.3)#jeho hlasitost
 pygame.mixer.music.play(-1,0.0)#ze sa ma opakovat do nekonecna a od zacati hry
 
