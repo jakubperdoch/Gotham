@@ -17,7 +17,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT)) #vykreslenie okna
 pygame.display.set_caption('Gotham') # nazov hry 
 
 #framerate
-clock=pygame.time.Clock()
+clock=pygame.time.Clock() #premena do ktorej zadam fpska
 FPS= 45
 
 #load music and sounds
@@ -32,19 +32,19 @@ pygame.mixer.music.set_volume(0.3)#jeho hlasitost
 pygame.mixer.music.play(-1,0.0)#ze sa ma opakovat do nekonecna a od zacati hry
 
 #load images
-bg_image = pygame.image.load("assets/bg.jpg").convert_alpha()
-batman_image = pygame.image.load("assets/batman.png").convert_alpha()
-platform_image=pygame.image.load("assets/forma.png")
-wing =pygame.image.load("assets/wing.png").convert_alpha()
+bg_image = pygame.image.load("assets/bg.jpg").convert_alpha() #nacita obrazok pozadia
+batman_image = pygame.image.load("assets/batman.png").convert_alpha() #nacita obrazok postavicky
+platform_image=pygame.image.load("assets/forma.png")#nacita obrazok platformy
+wing =pygame.image.load("assets/wing.png").convert_alpha()#nacita obrazok enemaka/stihacky
 
 
 #game variables
-GRAVITY = 1
-SCROLL_THRESH= 200
-MAX_PLATFORM=7
+GRAVITY = 1 #premena ktora pritahuje postavicku nadol
+SCROLL_THRESH= 200 #premena ktora posuva hraciu plochu nahor
+MAX_PLATFORM=7#maximalny pocet platfrom na jednej obrazovke
 scroll=0
-game_over = False
-score=0
+game_over = False #abz sa mohla zacat hra
+score=0# zacinajuce skore
 fade_counter=0
 
 
@@ -52,24 +52,24 @@ fade_counter=0
 if os.path.exists('score.txt'): #ak score.txt existuje tak si zoberie z neho high score 
     with open('score.txt','r') as file:
         high_score= int(file.read())
-else:
+else: #ak dokument neexistuje zacinajuce skore sa rovna nule
     high_score=0
 
 
 #define colors
-WHITE=(255,255,255)
-BLACK=(0,0,0)
-PANEL=(0,0,0)
+WHITE=(255,255,255) #biela
+BLACK=(0,0,0)# ciena
+PANEL=(0,0,0)#farba horneho panelu
 
 #fonts
-font_small= pygame.font.SysFont("Lucida Sans", 20)
-font_big= pygame.font.SysFont("Lucida Sans", 27)
-font_vbig= pygame.font.SysFont("Lucida Sans", 40)
+font_small= pygame.font.SysFont("Lucida Sans", 20)#male pismo
+font_big= pygame.font.SysFont("Lucida Sans", 27)#velke pismo
+font_vbig= pygame.font.SysFont("Lucida Sans", 40)#este vacsie pismo
 
 
 
 #function for outputting text onto screen
-def draw_text(text,font,text_color,x,y):
+def draw_text(text,font,text_color,x,y):#definicia na vykreslenie textu na game over obrazovku
     img= font.render(text,True,text_color)
     screen.blit(img, (x,y))
 
@@ -160,16 +160,16 @@ class Player(): #vlastnosti hraca a jeho parametre
 
 #enemy class
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self,SCREEN_WIDTH,y,img,scale):
+    def __init__(self,SCREEN_WIDTH,y,img,scale):#klasa enemy bude pozostavat zo sirky obrazovky,y-osi,obrazku, a z velkosti
         pygame.sprite.Sprite.__init__(self)
         
         #define variables
         self.direction= random.choice([-1,1]) #random vyber smeru pohybu enemaka
         
         if self.direction==1: #aby sa enemak otocil spravnym smerom
-            self.flip=True
+            self.flip=True#do prava
         else:
-            self.flip=False
+            self.flip=False#do lava
 
 
         #load images
@@ -191,7 +191,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y +=scroll#enemak ostava na y polohe a nehybe sa s nami
 
         #check if it gone off screen
-        if self.rect.right<0 or self.rect.left >SCREEN_WIDTH:#ked sa enemak dostane na okraj mapy bude zresetovany
+        if self.rect.right<0 or self.rect.left >SCREEN_WIDTH:#ked sa enemak dostane na okraj mapy bude vymazany
             self.kill()
 
 
@@ -216,7 +216,7 @@ class Platform(pygame.sprite.Sprite):
 
         #change platform if it has moved fully or hit a wall
         if self.move_counter >=100 or self.rect.left <0 or self.rect.right >SCREEN_WIDTH: #ak sa platformi budu pohybovat dostatocne dlho alebo narazia do steny tak zmenia smer
-            self.direction *= -1 
+            self.direction *= -1 #zmena na opacny smer pohybu
             self.move_counter =0
  
         #update platform vert postition
@@ -337,6 +337,7 @@ while run:
             draw_text("SCORE: " +str(score),font_big, WHITE, 20, 250)
             draw_text("PRESS SPACE TO PLAY OVER",font_big,WHITE,20 ,400 )
             draw_text("HIGHEST SCORE: " +str(high_score),font_big,WHITE,20,300)
+            draw_text("PRESS SHIFT FOR EXIT",font_big,WHITE,20,500)
             
             
 
@@ -344,7 +345,7 @@ while run:
             
             key=pygame.key.get_pressed()
             
-            if key[pygame.K_SPACE]: #zresetovanie parametrov a pozicie postavy
+            if key[pygame.K_SPACE]: #zresetovanie parametrov a pozicie postavy ak stlacime enter
                 #reset variables
                 game_over=False
                 score=0
@@ -358,6 +359,8 @@ while run:
                 platform_group.empty()
                 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False)
                 platform_group.add(platform)
+            if key[pygame.K_RSHIFT ]: #ukoncenie hry po stlaceni klavesy shift
+                break
 
 
     
