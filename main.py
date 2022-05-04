@@ -18,7 +18,7 @@ pygame.display.set_caption('Gotham') # nazov hry
 
 #framerate
 clock=pygame.time.Clock() #premena do ktorej zadam fpska
-FPS= 45
+FPS= 45 #frame per second
 
 #load music and sounds
 death_fx=pygame.mixer.Sound("assets/death.wav")#nacitanie soundu smrti
@@ -40,12 +40,12 @@ wing =pygame.image.load("assets/wing.png").convert_alpha()#nacita obrazok enemak
 
 #game variables
 GRAVITY = 1 #premena ktora pritahuje postavicku nadol
-SCROLL_THRESH= 200 #premena ktora posuva hraciu plochu nahor
+SCROLL_THRESH= 200 #premena priestor medzi postavvou a vrskom mapy
 MAX_PLATFORM=7#maximalny pocet platfrom na jednej obrazovke
-scroll=0
-game_over = False #abz sa mohla zacat hra
+scroll=0 #premena kotra sa stara  o posuvanie na dalsiu obrazovku
+game_over = False #aby sa mohla zacat hra
 score=0# zacinajuce skore
-fade_counter=0
+fade_counter=0#uzatvorenie obrazovky
 
 
 
@@ -70,7 +70,7 @@ font_vbig= pygame.font.SysFont("Lucida Sans", 40)#este vacsie pismo
 
 #function for outputting text onto screen
 def draw_text(text,font,text_color,x,y):#definicia na vykreslenie textu na game over obrazovku
-    img= font.render(text,True,text_color)
+    img= font.render(text,True,text_color)#
     screen.blit(img, (x,y))
 
 
@@ -81,65 +81,62 @@ def draw_panel(): #panel so score
     draw_text("SCORE: " +str(score),font_small,WHITE,0,0)#vypisuje score pocas hry
     
 
-
-
 #player class
 class Player(): #vlastnosti hraca a jeho parametre
     def __init__(self,x,y):
         self.image=pygame.transform.scale(batman_image,(60,60)) #velkost postavicky
         self.width= 25 #nastavene kolizie okolo postavy
         self.height=40 #nastavene kolizie okolo postavy
-        self.rect= pygame.Rect(0,0, self.width, self.height)
-        self.rect.center =(x,y)
+        self.rect= pygame.Rect(0,0, self.width, self.height)#vytvorenie stvorca pre kolizie -neskor ho dopasujeme do obrazka
+        self.rect.center =(x,y)#poloha postavy 
         self.vel_y=0
         self.flip=False #zakladne otocenie postavy do prava
+        
     
     def move(self):
 
-        #reset variables
+        #reset variables -pred tym este ako pouzijeme tieto premenne tak ich vyresetujeme na 0
         dx=0
         dy=0
         scroll=0
 
         #process keypresses
         key = pygame.key.get_pressed()
-        if key[pygame.K_a]:
-            dx= -10
+        if key[pygame.K_a]:#po stlaceni klavesi A
+            dx= -10#pohyb do lava
             self.flip=True #otocenie postavy do lava
-        if key[pygame.K_d]:
-            dx= +10
+        if key[pygame.K_d]:#po stlaceni klavesi D
+            dx= +10#pohyb do prava
             self.flip=False #otocenie postavy do prava
 
         #gravity
-        self.vel_y +=GRAVITY
+        self.vel_y +=GRAVITY #pohyb hraca nadol-gravitacia 
         dy += self.vel_y
 
         #ensure player doesnt go off the edge of the screen
-        if self.rect.left +dx <0:
-            dx=- self.rect.left
+        if self.rect.left +dx <0: #aby hrac nevysiel mimo mapu ale aby sa mohol max dotknut okraja -lava str
+            dx=- self.rect.left#kolko maximalne sa moze pohnut do lava
 
-        if self.rect.right +dx > SCREEN_WIDTH:
-            dx= SCREEN_WIDTH - self.rect.right
+        if self.rect.right +dx > SCREEN_WIDTH:#aby hrac nevysiel mimo mapu ale aby sa mohol max dotknut okraja -prava str
+            dx= SCREEN_WIDTH - self.rect.right#kolko maximalne sa moze pohnut do prava
 
         #check collision with platform
         for platform in platform_group:
-            #platform in the y diretion
-            if platform.rect.colliderect(self.rect.x,self.rect.y + dy,self.width,self.height):
+            #collision in the y diretion
+            if platform.rect.colliderect(self.rect.x,self.rect.y + dy,self.width,self.height):#kontrola ci dojde ku "zrazke"
                 #chech if  above  the platform
-                if self.rect.bottom < platform.rect.centery:
-                    if self.vel_y>0:
-                        self.rect.bottom=platform.rect.top
+                if self.rect.bottom < platform.rect.centery:#ak sa postava nachadza nad platformou
+                    if self.vel_y>0: # a ak pada
+                        self.rect.bottom=platform.rect.top#aby sa spravne dotykali kolizie postavy a platformy
                         dy=0
-                        self.vel_y =-20
-                        jump_fx.play()
+                        self.vel_y =-20#velocity bude zmensena tym padom bude skakat
+                        jump_fx.play()#zvuk skoku
                         
 
-
-        
         #check if the player has bounced to the top of the screen
-        if self.rect.top<=SCROLL_THRESH:
+        if self.rect.top<=SCROLL_THRESH:#ak sa postava nachadza nad scroll threhs- ,zacne sa nacitavat nova a plocha pod nim zanikne
             #if player is jumping
-            if self.vel_y<0:
+            if self.vel_y<0:#jedine ak sa postava posuva nahor-nie nadol
                 scroll= -dy
             
 
@@ -148,15 +145,14 @@ class Player(): #vlastnosti hraca a jeho parametre
         self.rect.y +=dy + scroll 
 
         #update mask
-        self.mask =pygame.mask.from_surface(self.image)#abz sa postava spravne dotykala enemaka
+        self.mask =pygame.mask.from_surface(self.image)#aby sa postava spravne dotykala enemaka
 
         return scroll
        
 
     def draw(self):
-        screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy
+        screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy a este aby postava pasovala do stvorca s koliziou
        
-
 
 #enemy class
 class Enemy(pygame.sprite.Sprite):
@@ -181,7 +177,7 @@ class Enemy(pygame.sprite.Sprite):
         if self.direction==1:#podmienka aby enemak nesiel mimo mapu
             self.rect.x= 0 
         else:
-            self.rect.x= SCREEN_WIDTH
+            self.rect.x= SCREEN_WIDTH#
         self.rect.y= y
 
     def update(self,scroll,SCREEN_WIDTH,):
@@ -199,57 +195,51 @@ class Enemy(pygame.sprite.Sprite):
 class Platform(pygame.sprite.Sprite):
     def __init__(self,x,y,width,moving):
         pygame.sprite.Sprite.__init__(self)
-        self.image=pygame.transform.scale(platform_image, (width,20))
-        self.moving= moving
-        self.move_counter=random.randint(0, 50) 
-        self.direction= random.choice([-1,1]) 
-        self.speed =random.randint(1, 2)
-        self.rect=self.image.get_rect()
+        self.image=pygame.transform.scale(platform_image, (width,20))#zmena velkosti obrazku platformi
+        self.moving= moving#moznost pohybu
+        self.move_counter=random.randint(0, 50)#dlzka-cas pohybu
+        self.direction= random.choice([-1,1])#vyber smeru pohybu
+        self.speed =random.randint(1, 2)#vyber z dvoch rychlosti
+        self.rect=self.image.get_rect()#vytvorenie stvorca okolo platformy pre kolizie
         self.rect.x=x
         self.rect.y=y
     
     def update(self,scroll):
         #move platform side to side if it is a moving platform
-        if self.moving==True: 
-            self.move_counter +=1
+        if self.moving==True: #
+            self.move_counter +=1#
             self.rect.x +=self.direction * self.speed #platformy mozu byt rozne rychle
 
         #change platform if it has moved fully or hit a wall
         if self.move_counter >=100 or self.rect.left <0 or self.rect.right >SCREEN_WIDTH: #ak sa platformi budu pohybovat dostatocne dlho alebo narazia do steny tak zmenia smer
             self.direction *= -1 #zmena na opacny smer pohybu
-            self.move_counter =0
+            self.move_counter =0#
  
         #update platform vert postition
-        self.rect.y +=scroll
+        self.rect.y +=scroll#
 
         #check if platform has gone off the screen
         if self.rect.top >SCREEN_HEIGHT: #aby nebola platforma mimo mapy,ked prejdeme na dalsiu obrazovku
             self.kill()
 
 
-
-
 #player instance
 batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 ) #zaciatocna pozicia hraca
 
 #create sprite groups
-platform_group=pygame.sprite.Group()
-enemy_group=pygame.sprite.Group()
+platform_group=pygame.sprite.Group()#pre ulozenie skupiny platform
+enemy_group=pygame.sprite.Group()#pre ulozenie skupiny enemakov
 
 #create  starting platform
 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False) #rozmery zaciatocnej platformy
-platform_group.add(platform)
-
-
+platform_group.add(platform)#pridanie zaciatocnej platformy do skupiny 
 
 
 #game loop
-run = True
+run = True#
 while run:
 
-    
     clock.tick(FPS)
-
 
     #GAME OVER
     if game_over == False:  #pokial je hrac nazive tak sa odohra main game loop
@@ -259,7 +249,6 @@ while run:
 
         #draw bg
         screen.blit(bg_image, (0, 0))#vykreslenie pozadia
-
 
         #generate platforms
         if len(platform_group)<MAX_PLATFORM:
@@ -273,8 +262,8 @@ while run:
             else:
                 p_moving=False
 
-            platform=Platform(p_x, p_y, p_w,p_moving) 
-            platform_group.add(platform)
+            platform=Platform(p_x, p_y, p_w,p_moving)#
+            platform_group.add(platform)#
 
         #update platforms
         platform_group.update(scroll)
@@ -304,24 +293,22 @@ while run:
         batman.draw() #vykreslenie postavy
         enemy_group.draw(screen)#vykreslenie enemakov
 
-        
 
         #draw panel
         draw_panel() #vzkresli panel so score 
 
         
-
     #check game over
         if batman.rect.top>SCREEN_HEIGHT: #aby sme nepadali do nekonecna
             game_over=True 
             death_fx.play()#aby zahral zvuk smrti
     #check for collision with enemy
-        if pygame.sprite.spritecollide(batman, enemy_group, False,pygame.sprite.collide_mask):#ak sa postava "dotkne" enemaka je game ober
+        if pygame.sprite.spritecollide(batman, enemy_group, False,pygame.sprite.collide_mask):#ak sa postava "dotkne" enemaka je game over
             game_over=True
             death_fx.play()#aby zahral zvuk smrti
     else:
         if fade_counter<SCREEN_WIDTH:
-            fade_counter +=5 #uzatvorenie hry po smrti
+            fade_counter +=5 #uzatvorenie hry po smrti ciernymi obdlznikami
             for y in range(0,6,2):
                 pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100)) #uzatvorenie obrazovky
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
@@ -339,10 +326,6 @@ while run:
             draw_text("HIGHEST SCORE: " +str(high_score),font_big,WHITE,20,300)
             draw_text("PRESS SHIFT FOR EXIT",font_big,WHITE,20,500)
             
-            
-
-            
-            
             key=pygame.key.get_pressed()
             
             if key[pygame.K_SPACE]: #zresetovanie parametrov a pozicie postavy ak stlacime enter
@@ -359,15 +342,13 @@ while run:
                 platform_group.empty()
                 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False)
                 platform_group.add(platform)
-            if key[pygame.K_RSHIFT ]: #ukoncenie hry po stlaceni klavesy shift
+            if key[pygame.K_LSHIFT ]: #ukoncenie hry po stlaceni klavesy shift
                 break
 
-
-    
     #event handler
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT: #ukoncenie hry
-            if score> high_score: #ak vypneme hru xkom ulozi sa score
+            if score> high_score: # ulozi sa najvyssie dosiahnute skore
                 high_score= score
                 with open('score.txt','w') as file:
                     file.write(str(high_score))
@@ -375,6 +356,5 @@ while run:
     
 #update display window
     pygame.display.update()
-
 
 pygame.quit()
