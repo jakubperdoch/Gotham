@@ -4,23 +4,23 @@ import random #import random
 import os #import os
 from pygame import mixer#import pre hudbu
 
-#initialise pygame
+#inicializacia pygam-u a mixer-u
 mixer.init()
 pygame.init()
 
-#game window
+#okno hry 
 SCREEN_WIDTH= 400 #šírka
 SCREEN_HEIGHT= 600 #výška
 
-#create game window
+#vytvorenie okna hry
 screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT)) #vykreslenie okna
 pygame.display.set_caption('Gotham') # nazov hry 
 
 #framerate
 clock=pygame.time.Clock() #premena do ktorej zadam fpska
-FPS= 45 #frame per second
+FPS= 45 # "obrazky za sekundu"
 
-#load music and sounds
+#nacitanie hudby a zvukov  
 death_fx=pygame.mixer.Sound("assets/death.wav")#nacitanie soundu smrti
 death_fx.set_volume(0.5)#jeho hlasitost
 
@@ -31,14 +31,14 @@ pygame.mixer.music.load("assets/gotham.wav")#nacitanie hudby
 pygame.mixer.music.set_volume(0.3)#jeho hlasitost
 pygame.mixer.music.play(-1,0.0)#ze sa ma opakovat do nekonecna a od zacati hry
 
-#load images
+#nacitanie obrazkov
 bg_image = pygame.image.load("assets/bg.jpg").convert_alpha() #nacita obrazok pozadia
 batman_image = pygame.image.load("assets/batman.png").convert_alpha() #nacita obrazok postavicky
 platform_image=pygame.image.load("assets/forma.png")#nacita obrazok platformy
 wing =pygame.image.load("assets/wing.png").convert_alpha()#nacita obrazok enemaka/stihacky
 
 
-#game variables
+#premenne ktore budeme pouzivat
 GRAVITY = 1 #premena ktora pritahuje postavicku nadol
 SCROLL_THRESH= 200 #premena priestor medzi postavvou a vrskom mapy
 MAX_PLATFORM=7#maximalny pocet platfrom na jednej obrazovke
@@ -56,34 +56,34 @@ else: #ak dokument neexistuje zacinajuce skore sa rovna nule
     high_score=0
 
 
-#define colors
+#definicia farieb
 WHITE=(255,255,255) #biela
 BLACK=(0,0,0)# ciena
 PANEL=(0,0,0)#farba horneho panelu
 
-#fonts
+#definicia fontov
 font_small= pygame.font.SysFont("Lucida Sans", 20)#male pismo
 font_big= pygame.font.SysFont("Lucida Sans", 27)#velke pismo
 font_vbig= pygame.font.SysFont("Lucida Sans", 40)#este vacsie pismo
 
 
 
-#function for outputting text onto screen
+#funkcia vykreslenia textu a nasledne zobraznie v okne
 def draw_text(text,font,text_color,x,y):#definicia na vykreslenie textu na game over obrazovku
     img= font.render(text,True,text_color)#
     screen.blit(img, (x,y))
 
 
-#function for drawing info panel
+#funkcia vykreslenia skore
 def draw_panel(): #panel so score
     pygame.draw.rect(screen, PANEL, (0,0,SCREEN_WIDTH,30))#pozadie tabulky
     pygame.draw.line(screen,WHITE,(0,30),(SCREEN_WIDTH,30),3)#ciara oddelujuca hru a tabulku
     draw_text("SCORE: " +str(score),font_small,WHITE,0,0)#vypisuje score pocas hry
     
 
-#player class
+#trieda "hráč" (postava)
 class Player(): #vlastnosti hraca a jeho parametre
-    def __init__(self,x,y):
+    def __init__(self,x,y):#ked povolame tuto klasu toto bude prva vec ktora sa odohra
         self.image=pygame.transform.scale(batman_image,(60,60)) #velkost postavicky
         self.width= 25 #nastavene kolizie okolo postavy
         self.height=40 #nastavene kolizie okolo postavy
@@ -100,7 +100,7 @@ class Player(): #vlastnosti hraca a jeho parametre
         dy=0
         scroll=0
 
-        #process keypresses
+        #spracovanie stlacenia klaves
         key = pygame.key.get_pressed()
         if key[pygame.K_a]:#po stlaceni klavesi A
             dx= -10#pohyb do lava
@@ -109,22 +109,22 @@ class Player(): #vlastnosti hraca a jeho parametre
             dx= +10#pohyb do prava
             self.flip=False #otocenie postavy do prava
 
-        #gravity
+        #gravitacia
         self.vel_y +=GRAVITY #pohyb hraca nadol-gravitacia 
         dy += self.vel_y
 
-        #ensure player doesnt go off the edge of the screen
+        #zaistenie aby hrac nevysiel z herneho okna
         if self.rect.left +dx <0: #aby hrac nevysiel mimo mapu ale aby sa mohol max dotknut okraja -lava str
             dx=- self.rect.left#kolko maximalne sa moze pohnut do lava
 
         if self.rect.right +dx > SCREEN_WIDTH:#aby hrac nevysiel mimo mapu ale aby sa mohol max dotknut okraja -prava str
             dx= SCREEN_WIDTH - self.rect.right#kolko maximalne sa moze pohnut do prava
 
-        #check collision with platform
+        #kontrola kolizie s platformami
         for platform in platform_group:
-            #collision in the y diretion
+            #kolizie v y-ovej osi 
             if platform.rect.colliderect(self.rect.x,self.rect.y + dy,self.width,self.height):#kontrola ci dojde ku "zrazke"
-                #chech if  above  the platform
+                #kontrola ak je hrac nad platformou 
                 if self.rect.bottom < platform.rect.centery:#ak sa postava nachadza nad platformou
                     if self.vel_y>0: # a ak pada
                         self.rect.bottom=platform.rect.top#aby sa spravne dotykali kolizie postavy a platformy
@@ -133,18 +133,18 @@ class Player(): #vlastnosti hraca a jeho parametre
                         jump_fx.play()#zvuk skoku
                         
 
-        #check if the player has bounced to the top of the screen
-        if self.rect.top<=SCROLL_THRESH:#ak sa postava nachadza nad scroll threhs- ,zacne sa nacitavat nova a plocha pod nim zanikne
-            #if player is jumping
-            if self.vel_y<0:#jedine ak sa postava posuva nahor-nie nadol
+        #kontrola ci hrac sa nedostal na vrch herneho okna
+        if self.rect.top<=SCROLL_THRESH:#ak sa postava nachadza nad scroll thresh- ,zacne sa nacitavat nova a plocha pod nim zanikne
+            #ak hrac skace...
+            if self.vel_y<0:#jedine ak sa postava posuva nahor  -nie nadol
                 scroll= -dy
             
 
-        #update rect position
+        #aktualizacia "rect" pozicie 
         self.rect.x +=dx
         self.rect.y +=dy + scroll 
 
-        #update mask
+        #aktualizacia masky aby sa kontrolovalo ci sa hrac dotyka enemaka
         self.mask =pygame.mask.from_surface(self.image)#aby sa postava spravne dotykala enemaka
 
         return scroll
@@ -154,12 +154,12 @@ class Player(): #vlastnosti hraca a jeho parametre
         screen.blit(pygame.transform.flip(self.image,self.flip, False),(self.rect.x-20,self.rect.y-5)) #otacanie postavy a este aby postava pasovala do stvorca s koliziou
        
 
-#enemy class
+#trieda nepriatel
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self,SCREEN_WIDTH,y,img,scale):#klasa enemy bude pozostavat zo sirky obrazovky,y-osi,obrazku, a z velkosti
+    def __init__(self,SCREEN_WIDTH,y,img,scale):#ked povolame tuto klasu toto bude prva vec ktora sa odohra
         pygame.sprite.Sprite.__init__(self)
         
-        #define variables
+        #definicia premennej
         self.direction= random.choice([-1,1]) #random vyber smeru pohybu enemaka
         
         if self.direction==1: #aby sa enemak otocil spravnym smerom
@@ -168,7 +168,7 @@ class Enemy(pygame.sprite.Sprite):
             self.flip=False#do lava
 
 
-        #load images
+        #nacitanie obrazkov
         wing =pygame.image.load("assets/wing.png").convert_alpha()#obrazok enemaka
         wing= pygame.transform.flip(wing, self.flip, False)#enemak sa otoci v smere pohybu
         self.image=pygame.transform.scale(wing,(110,100))#rozmery enemaka
@@ -182,21 +182,21 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self,scroll,SCREEN_WIDTH,):
         
-        #move enemy
+        #pohyb nepriatela 
         self.rect.x += self.direction * 2 #smer a rychlost enemaka
         self.rect.y +=scroll#enemak ostava na y polohe a nehybe sa s nami
 
-        #check if it gone off screen
+        #kontrola ci je nepriatel mimo okno
         if self.rect.right<0 or self.rect.left >SCREEN_WIDTH:#ked sa enemak dostane na okraj mapy bude vymazany
             self.kill()
 
 
-#platform class
+#trieda platforma
 class Platform(pygame.sprite.Sprite):
     def __init__(self,x,y,width,moving):
         pygame.sprite.Sprite.__init__(self)
         self.image=pygame.transform.scale(platform_image, (width,20))#zmena velkosti obrazku platformi
-        self.moving= moving#moznost pohybu
+        self.moving= moving #moznost pohybu
         self.move_counter=random.randint(0, 50)#dlzka-cas pohybu
         self.direction= random.choice([-1,1])#vyber smeru pohybu
         self.speed =random.randint(1, 2)#vyber z dvoch rychlosti
@@ -205,37 +205,37 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y=y
     
     def update(self,scroll):
-        #move platform side to side if it is a moving platform
+        #pohyb platfromi zo strany na stranu ak sa jedna o hybajucu sa platformu
         if self.moving==True: #
             self.move_counter +=1#
             self.rect.x +=self.direction * self.speed #platformy mozu byt rozne rychle
 
-        #change platform if it has moved fully or hit a wall
+        #zmena pohybu platformi ak sa hybala dost dlhho alebo narazila do steny
         if self.move_counter >=100 or self.rect.left <0 or self.rect.right >SCREEN_WIDTH: #ak sa platformi budu pohybovat dostatocne dlho alebo narazia do steny tak zmenia smer
             self.direction *= -1 #zmena na opacny smer pohybu
             self.move_counter =0#
  
-        #update platform vert postition
-        self.rect.y +=scroll#
+        #aktualizacia vertikalnej pozicie platformi
+        self.rect.y +=scroll
 
-        #check if platform has gone off the screen
+        #kontorla ak platforma by isla mimo mapu
         if self.rect.top >SCREEN_HEIGHT: #aby nebola platforma mimo mapy,ked prejdeme na dalsiu obrazovku
             self.kill()
 
 
-#player instance
+#pozicia hraca
 batman = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 ) #zaciatocna pozicia hraca
 
-#create sprite groups
-platform_group=pygame.sprite.Group()#pre ulozenie skupiny platform
-enemy_group=pygame.sprite.Group()#pre ulozenie skupiny enemakov
+#vytvorenie sprite skupin
+platform_group=pygame.sprite.Group()#pre ulozenie skupiny viditelnich platform
+enemy_group=pygame.sprite.Group()#pre ulozenie skupiny viditelnich enemakov
 
-#create  starting platform
+#vytvorenie zaciatocnej platformy
 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False) #rozmery zaciatocnej platformy
 platform_group.add(platform)#pridanie zaciatocnej platformy do skupiny 
 
 
-#game loop
+#HRA
 run = True#
 while run:
 
@@ -244,13 +244,13 @@ while run:
     #GAME OVER
     if game_over == False:  #pokial je hrac nazive tak sa odohra main game loop
     
-        #movement
+        #pohyb 
         scroll=batman.move() #pohyb postavicky
 
-        #draw bg
+        #vykreslenie pozadia
         screen.blit(bg_image, (0, 0))#vykreslenie pozadia
 
-        #generate platforms
+        #generovanie platform
         if len(platform_group)<MAX_PLATFORM:
             p_w = random.randint(40, 60) #rozmedzie sirky platform
             p_x = random.randint(0, SCREEN_WIDTH-  p_w) #pozicia platform x os
@@ -265,44 +265,44 @@ while run:
             platform=Platform(p_x, p_y, p_w,p_moving)#
             platform_group.add(platform)#
 
-        #update platforms
+        #aktualizacia platform
         platform_group.update(scroll)
 
-        #generate enemies
+        #generovanie enemakov
         if len(enemy_group) ==0 and score>300: #mnozstvo  enemakov
             enemy=Enemy(SCREEN_WIDTH, 100, wing, 1.5)#parametre enemaka
             enemy_group.add(enemy)
 
-        #update enemies
+        #aktualizacia enemakov
         enemy_group.update(scroll,SCREEN_WIDTH)
 
-        #update score
+        #aktualizacia skore
         if scroll > 0:
             score += scroll #skore sa updatuje podla dosiahnutej vysky hraca
 
 
-        #draw line at previous high score
+        #vykreslenie ciary kde bolo dosiahnute najvyssie skore
         pygame.draw.line(screen, WHITE, (0,score-high_score + SCROLL_THRESH),(SCREEN_WIDTH,score-high_score + SCROLL_THRESH),3) #čiara zaznačujúca high score
         draw_text('HIGH SCORE',font_small,WHITE,SCREEN_WIDTH-130,score-high_score + SCROLL_THRESH) #napis "high score" pod ciarou
 
-        #update platforms
+        #aktualizacia platforiem
         platform_group.update(scroll)#vykresluje plosiny do nekonecna
 
-        #draw sprites
-        platform_group.draw(screen) # vykreslenie platform
+        #vykreslenie spritov
+        platform_group.draw(screen) # vykreslenie skupiny platforiem
         batman.draw() #vykreslenie postavy
-        enemy_group.draw(screen)#vykreslenie enemakov
+        enemy_group.draw(screen)#vykreslenie skupiny enemakov
 
 
-        #draw panel
-        draw_panel() #vzkresli panel so score 
+        #vykreslenie panela
+        draw_panel() #vykresli panel so score 
 
         
-    #check game over
+    #kontrola ci je game over
         if batman.rect.top>SCREEN_HEIGHT: #aby sme nepadali do nekonecna
             game_over=True 
             death_fx.play()#aby zahral zvuk smrti
-    #check for collision with enemy
+    #kontorola ci nastal dotyk s enemakom
         if pygame.sprite.spritecollide(batman, enemy_group, False,pygame.sprite.collide_mask):#ak sa postava "dotkne" enemaka je game over
             game_over=True
             death_fx.play()#aby zahral zvuk smrti
@@ -313,7 +313,7 @@ while run:
                 pygame.draw.rect(screen, BLACK, (0,y*100,fade_counter,100)) #uzatvorenie obrazovky
                 pygame.draw.rect(screen, BLACK, (SCREEN_WIDTH -fade_counter,(y+1)*100,SCREEN_WIDTH,100)) #uzatvorenie obrazovky z druhej strany
 
-                #update high score
+                #aktualizacia najvyssieho skore
             if score> high_score: #prepise najvyssie dosiahnute skore
                 high_score= score
                 with open('score.txt','w') as file:
@@ -328,24 +328,24 @@ while run:
             
             key=pygame.key.get_pressed()
             
-            if key[pygame.K_SPACE]: #zresetovanie parametrov a pozicie postavy ak stlacime enter
-                #reset variables
+            if key[pygame.K_SPACE]: #zresetovanie premennych a pozicie postavy ak stlacime space
+                #resetovanie premennych
                 game_over=False
                 score=0
                 scroll=0
                 fade_counter=0
-                #reposition batman
+                #premiestnenie postavy
                 batman.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150 )
-                #reset enemy
+                #resetovanie enemakov
                 enemy_group.empty()
-                #reset platforms
+                #resetovanie platforiem
                 platform_group.empty()
                 platform=Platform(SCREEN_WIDTH //2-50, SCREEN_HEIGHT-50, 100,False)
                 platform_group.add(platform)
-            if key[pygame.K_LSHIFT ]: #ukoncenie hry po stlaceni klavesy shift
+            if key[pygame.K_LSHIFT ]: #ukoncenie hry po stlaceni lavej klavesy shift
                 break
 
-    #event handler
+    #ak ukoncime hru krizikom tak nech sa zapise skore
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT: #ukoncenie hry
             if score> high_score: # ulozi sa najvyssie dosiahnute skore
@@ -354,7 +354,7 @@ while run:
                     file.write(str(high_score))
             run= False
     
-#update display window
+#aktualizacia okna hry
     pygame.display.update()
 
 pygame.quit()
